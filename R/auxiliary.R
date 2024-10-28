@@ -94,90 +94,30 @@ squareDistAsymptote <- function(l, d, avg_cov, avg_prec,
 }
 
 
-
-## Parameters:
-#
-# l = step length of RWM algorithm with proposal variance l^2/d
-# avg_cov = estimate of average eigenvalue of the covariance
-# avg_precision = estimate of average eigenvalue of precision matrix
-#
-# rho = grid of correlations of gradient projections (in [0,1]) to search over.
-# n = Monte Carlo sample size for numerical evaluation of expectation
-# plot = logical, whether to output diagnostic plots
-# correct = logical, whether to correct for error at rho = 1 or not
-#
-# squareDistAsymptote <- function(l, d, avg_cov, avg_prec, 
-#                                 rho = c(seq(0, 1, 0.01)), n = 1e7, 
-#                                 plot = TRUE, correct = TRUE) {
-#   l1sq <- l^2 * avg_prec
-#   
-#   MCavg <- function(rho,n) {
-#     z1 <- rnorm(n)
-#     z <- rnorm(n)
-#     
-#     out <- rep(NA, length(rho))
-#     for (r in seq_along(rho)){
-#       z2 <- rho[r] * z1 + sqrt(1 - rho[r]^2) * z
-#       out[r] <- mean(exp(pmin(0, -sqrt(l1sq)*z1-0.5 * l1sq, -sqrt(l1sq)*z2-0.5 * l1sq)))
-#     }
-#     # Correct by forcing LHS to take the analytically correct value when the correlation is 1
-#     offset <- 2 * pnorm(-0.5*sqrt(l1sq)) - mean(exp(pmin(0, -sqrt(l1sq)*z1-0.5 * l1sq)))
-#     out <- out + offset
-#     
-#     return(out)
-#   }
-#   lhs <- MCavg(rho, n)
-#   
-#   # lhs <- MCavg(rho, l1sq, n) # Called from C++ code
-#   
-#   # Get solution for CRN
-#   rhs_crn  <- 2 * rho * pnorm(-0.5*sqrt(l1sq))
-#   if(sum(lhs >= rhs_crn) == length(rhs_crn)) {
-#     rho_crn <- 1
-#   } else {
-#     rho_crn <- rho[Position(isFALSE, lhs > rhs_crn, right=FALSE) - 1] # Stop at last "true"
-#   }
-#   
-#   # Get solution for reflection coupling
-#   ellipt <- 1/ (avg_cov * avg_prec) # Measure of ellipticity
-#   
-#   if(ellipt == 1) {
-#     print("Spherically symmetric target, reflection-coupled chains asymptote at 0.")
-#     v_refl <- 1
-#   } else {
-#     
-#     rhs_refl <- 2 * (rho - ellipt) / (1 - ellipt) * pnorm(-0.5*sqrt(l1sq))
-#     
-#     # Get solution for reflection
-#     if(sum(lhs >= rhs_refl) == length(rhs_refl)) {
-#       rho_refl <- 1
-#     } else {
-#       rho_refl <- rho[Position(isFALSE, lhs > rhs_refl, right=FALSE) - 1]
-#     }
-#     v_refl <-  (rho_refl - ellipt) / (1 - ellipt)
-#   }
-#   
-#   if(plot){
-#     if(ellipt != 1) {
-#       par(mfrow = c(1,2))
-#       plot(rho, lhs, xlab = "Correlation of gradients", main = "CRN coupling", ylab = "Functions to intersect")
-#       abline(v = rho_crn, lty = 2, col = "red")
-#       lines(rho, rhs_crn, col = "red")
-#       
-#       plot(rho, lhs, xlab = "Correlation of gradients", main = "Reflection coupling", ylab = "Functions to intersect")
-#       abline(v = rho_refl, lty = 2, col = "red")
-#       lines(rho, rhs_refl, col = "red")
-#       par(mfrow = c(1,1))
-#     } else {
-#       plot(rho, lhs, xlab = "Correlation of gradients", main = "CRN coupling", ylab = "Functions to intersect") 
-#       abline(v = rho_crn, lty = 2, col = "red")
-#       lines(rho, rhs_crn, col = "red")
-#     }
-#     
-#   }
-#   
-#   return(list("crn"  = 2*avg_cov*d*(1 - rho_crn), 
-#               "refl" = 2*avg_cov*d*(1 - v_refl))) 
-# }
-
+#' @export
+scaledSquaredistAsymptote <- function(lambda, epsilon, 
+                                      v_lim = c(0, 1 - 1e-05)) {
+  
+  h_1  <- 2 * pnorm(-0.5*lambda)
+  fixedPointEqn <- function(v, corr_fun) {
+    g(1, 1, corr_fun(v), lambda)[1] - h_1 * v
+  }
+  
+  # Get solution for CRN
+  corr_crn <- function(v){v}
+  vstar_crn <- uniroot(function(v){fixedPointEqn(v, corr_crn)}, v_lim, extendInt = c("downX"),tol = 1e-9, maxiter = 1e6)$root
+  sstar_crn <- 2*(1-vstar_crn)
+  
+  # Get solution for Reflection
+  if(epsilon == 1) {
+    # print("Spherically symmetric target, reflection-coupled chains asymptote at 0.")
+    vstar_refl <- 1
+  } else {
+    corr_refl <- function(v) { v + (1-v)/epsilon }
+    vstar_refl <- uniroot(function(v){fixedPointEqn(v, corr_refl)}, v_lim, extendInt = c("downX"),tol = 1e-9, maxiter = 1e6)$root
+  }
+  sstar_refl <- 2*(1-vstar_refl)
+  return(list("crn" = sstar_crn,
+              "refl" = sstar_refl))
+}
 

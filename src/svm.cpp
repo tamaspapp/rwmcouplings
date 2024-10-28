@@ -32,11 +32,9 @@ inline double logpi_nograd_(const Eigen::Ref<const Eigen::ArrayXd> &x,
                             const int &T)
 {
     // "temp" is (a constant shift off) from twice the negative log-posterior
-    double temp = x.sum() + inv_beta_sq  * (y_sq * exp(-x)).sum();
-
-    temp += inv_sigma_sq * (phi * x.segment(0, T - 2) -  x.segment(1, T - 1)).square().sum();
-
-    temp += (1 - phi_sq) * inv_sigma_sq * x(0) * x(0);
+    double temp = x.sum() + inv_beta_sq  * (y_sq * exp(-x)).sum()
+                          + inv_sigma_sq * (phi * x.segment(0, T - 2) -  x.segment(1, T - 1)).square().sum()
+                          + (1. - phi_sq) * inv_sigma_sq * x(0) * x(0);
 
     return (-0.5) * temp;
 }
@@ -597,4 +595,189 @@ Rcpp::List svmTwoScaleGCRNRWM(const Eigen::Map<Eigen::ArrayXd> x0,
     
     return Rcpp::List::create(Rcpp::Named("squaredist") = Rcpp::wrap(xy_square_dist),
                               Rcpp::Named("tau") = tau);
+}
+
+
+
+
+
+
+/* Two-scale coupling, with corrected reflection and reflection. */
+
+// log-density
+inline double logpi_svm(const Eigen::Ref<const Eigen::VectorXd> &x,
+                        const Eigen::Ref<const Eigen::VectorXd> &y_sq,
+                        const double &beta,
+                        const double &sigma,
+                        const double &phi)
+{
+    double temp = x.sum() + y_sq.dot((-x).array().exp().matrix()) / (beta*beta)
+                          + (phi * x.head(x.size()-1) - x.tail(x.size()-1)).squaredNorm() / (sigma*sigma)
+                          + (1. - phi*phi) * x(0) * x(0) / (sigma*sigma);
+    return (-0.5) * temp;
+}
+// score
+inline Eigen::VectorXd gradlogpi_svm(const Eigen::Ref<const Eigen::VectorXd> &x,
+                                     const Eigen::Ref<const Eigen::VectorXd> &y_sq,
+                                     const double &beta,
+                                     const double &sigma,
+                                     const double &phi)
+{
+    Eigen::VectorXd temp = Eigen::VectorXd::Constant(x.size(),-0.5); 
+    temp += 0.5 * y_sq.cwiseProduct((-x).array().exp().matrix()) / (beta*beta);
+    temp(0) -= (1 - phi*phi) * x(0) / (sigma*sigma);
+    temp.head(temp.size()-1) -= phi * (phi * x.head(x.size()-1) - x.tail(x.size()-1)) / (sigma*sigma);
+    temp.tail(temp.size()-1) += (phi * x.head(x.size()-1) - x.tail(x.size()-1)) / (sigma*sigma);
+    return temp;
+}
+
+//' Two-scale coupling, with corrected reflection and reflection.
+//' @export
+//[[Rcpp::export(rng = false)]]
+Rcpp::List svmTwoScaleGCReflRWM(const Eigen::Map<Eigen::VectorXd> x0,
+                                const Eigen::Map<Eigen::VectorXd> y0,
+                                const Eigen::Map<Eigen::VectorXd> y_data,
+                                const double &beta,
+                                const double &sigma,
+                                const double &phi,
+                                const double &h,
+                                const int &iter,
+                                const int &thin,
+                                const double &thresh) // Note that this is used in the check: |x-y|^2 < thresh
+{   
+    // Declare logdensity and score as lambdas
+    Eigen::VectorXd y_data_sq = y_data.cwiseProduct(y_data);
+    auto logpi = [&](Eigen::VectorXd x) { return logpi_svm(x, y_data_sq, beta, sigma, phi); };
+    auto gradlogpi = [&](Eigen::VectorXd x) { return  gradlogpi_svm(x, y_data_sq, beta, sigma, phi); };
+
+    // Declare constants
+    int d = x0.rows();
+    auto inv_h = 1./h;
+
+    // Declare temporary variables
+    Eigen::VectorXd x(d), xp(d), e_gx(d);
+    Eigen::VectorXd y(d), yp(d), e_gy(d);
+    Eigen::VectorXd x_dot(d);
+    Eigen::VectorXd y_dot(d);
+    Eigen::VectorXd z(d), e(d), c_x(d), c_y(d);
+    double z1;
+    double u;
+    double e_sqnorm;
+    double logpi_x, logpi_xp, logHR_x;
+    double logpi_y, logpi_yp, logHR_y;
+    int accepted_x = 0, accepted_y = 0;
+    bool acc_x_flag = true, acc_y_flag = true, cpl_flag = false;
+    double log_refl, u_refl;
+    int tau = -1, iter_done = iter;
+
+    // Do MCMC
+    x = x0;
+    logpi_x = logpi(x);
+    e_gx = gradlogpi(x).normalized();
+
+    y = y0;
+    logpi_y = logpi(y);
+    e_gy = gradlogpi(y).normalized();
+
+    Eigen::VectorXd xy_square_dist = Eigen::VectorXd::Zero(iter/thin + 1);
+    double squaredist = (x - y).squaredNorm();
+    xy_square_dist(0) = squaredist;
+
+    // "iter" iterations of MCMC
+    for (int i = 1; i <= iter; i++)
+    {
+        cpl_flag = false;
+        e = (x - y) * inv_h;
+        if (squaredist < thresh) // Reflection-maximal
+        {
+            for (int j = 0; j < d; j++)
+            {
+              x_dot(j) = RNG::rnorm(RNG::rng);
+            }
+            xp = x + x_dot * h;
+            logpi_xp = logpi(xp);
+
+            log_refl = -0.5 * (x_dot + e).squaredNorm() + 0.5 * x_dot.squaredNorm();
+            u_refl = RNG::runif(RNG::rng);
+            if (log_refl > 0 || log(u_refl) < log_refl) // Couple the proposals
+            {
+                cpl_flag = true;
+                yp = xp;
+                logpi_yp = logpi_xp;
+            }
+            else // Reflect
+            {
+                e.normalize();
+                y_dot = x_dot - (2 * x_dot.dot(e)) * e;
+                yp = y + y_dot * h;
+                logpi_yp = logpi(yp);
+            }
+        }
+        else // Corrected reflection
+        {
+            e.normalize();
+            c_x = (e_gx - e_gx.dot(e) * e).normalized();
+            c_y = (e_gy - e_gy.dot(e) * e).normalized();
+
+            // Proposals
+            for (int j = 0; j < d; j++)
+            {
+                z(j) = RNG::rnorm(RNG::rng);
+            }
+            z1 = RNG::rnorm(RNG::rng);
+
+            x_dot = z - z.dot(c_x) * c_x + z1 * c_x;
+            y_dot = z - 2 * z.dot(e) * e - z.dot(c_y) * c_y + z1 * c_y;
+
+            xp = x + x_dot * h;
+            logpi_xp = logpi(xp);
+
+            yp = y + y_dot * h;
+            logpi_yp = logpi(yp);
+        }
+
+        // Acceptances
+        logHR_x = logpi_xp - logpi_x;
+        logHR_y = logpi_yp - logpi_y;
+
+        u = RNG::runif(RNG::rng);
+        if (logHR_x > 0 || log(u) < logHR_x)
+        {
+            acc_x_flag = true;
+            ++accepted_x;
+            x = xp;
+            logpi_x = logpi_xp;
+            e_gx = gradlogpi(x).normalized(); // Update gradient if accepted; could update gradients less often with more complicated control flow.
+        }
+        else{acc_x_flag = false;}
+
+        if (logHR_y > 0 || log(u) < logHR_y)
+        {
+            acc_y_flag = true;
+            ++accepted_y;
+            y = yp;
+            logpi_y = logpi_yp;
+            e_gy = gradlogpi(y).normalized();
+        }
+        else{acc_y_flag = false;}
+
+        if (cpl_flag && acc_x_flag && acc_y_flag) // Coalescence!
+        {
+            tau = i;
+            iter_done = tau;
+            break;
+        }
+
+        squaredist = (x - y).squaredNorm();
+        if (i % thin == 0)
+        {
+            xy_square_dist(i/thin) = squaredist;
+        }
+    }
+    return Rcpp::List::create(Rcpp::Named("x") = x,
+                              Rcpp::Named("y") = y,
+                              Rcpp::Named("squaredist") = xy_square_dist,
+                              Rcpp::Named("tau") = tau,
+                              Rcpp::Named("acc_x") = (double)accepted_x / (double) iter_done,
+                              Rcpp::Named("acc_y") = (double)accepted_y / (double) iter_done);
 }

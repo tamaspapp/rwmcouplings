@@ -4,7 +4,11 @@ library(ggh4x)
 library(rwmcouplings)
 library(reshape2)
 library(latex2exp)
-set.seed(12345)
+seed <- 12345
+
+# For optimal Markovian coupling
+library(emg)
+library(TruncatedNormal)
 
 ####
 # Preliminary functions
@@ -23,6 +27,7 @@ getPlotDf <- function(x,y,x0,y0,v0,l,d,tmax,length_plot,asymptote_crn) {
   
   
   # GCRN ####
+  set.seed(seed)
   out_mcmc <- RWM_gcrn(x,y,h,iter,spherical,spherical_grad)
   out_ode  <- ode_gcrn(x0,y0,v0,l,ode_times)
   
@@ -34,18 +39,18 @@ getPlotDf <- function(x,y,x0,y0,v0,l,d,tmax,length_plot,asymptote_crn) {
   df_gcrn <- data.frame("squaredist/d" = squaredist_mcmc/d, "ode" = squaredist_ode, "ode.asymptote" = ode_asympt, "iter/d" = ode_times, "type" = "GCRN")
   
   # CRN ####
+  set.seed(seed)
   out_mcmc <- RWM_crn(x,y,h,iter,spherical,spherical_grad)
   out_ode  <- ode_crn(x0,y0,v0,l,ode_times)
   
-  # out_ode$innerprod / sqrt(out_ode$xsq * out_ode$ysq)
-  
   squaredist_mcmc <- out_mcmc$squaredist[thinned_mcmc]
   squaredist_ode <- out_ode$xsq + out_ode$ysq - 2 * out_ode$innerprod
-  ode_asympt <- rep(NA, length_plot)#rep(asymptote_crn, length_plot)
+  ode_asympt <- rep(NA, length_plot)
   
   df_crn <- data.frame("squaredist/d" = squaredist_mcmc/d, "ode" = squaredist_ode, "ode.asymptote" = ode_asympt, "iter/d" = ode_times, "type" = "CRN")
   
   # Reflection ####
+  set.seed(seed)
   out_mcmc <- RWM_refl(x,y,h,iter,spherical,spherical_grad)
   out_ode  <- ode_refl(x0,y0,v0,l,ode_times)
   
@@ -56,9 +61,11 @@ getPlotDf <- function(x,y,x0,y0,v0,l,d,tmax,length_plot,asymptote_crn) {
   df_refl <- data.frame("squaredist/d" = squaredist_mcmc/d, "ode" = squaredist_ode, "ode.asymptote" = ode_asympt, "iter/d" = ode_times, "type" = "Reflection")
   
   # Optimal ####
+  set.seed(seed)
+  out_mcmc <- RWM2targets_optimal(x,y,h,iter,spherical,spherical_grad,spherical,spherical_grad)
   out_ode <- ode_optimal(x0,y0,v0,l,ode_times)
   
-  squaredist_mcmc <- rep(NA, length(thinned_mcmc))
+  squaredist_mcmc <- out_mcmc$squaredist[thinned_mcmc]
   squaredist_ode <- out_ode$xsq + out_ode$ysq - 2 * out_ode$innerprod
   ode_asympt<- rep(NA, length_plot)
   
@@ -305,6 +312,7 @@ out_plot <-
   ggplot(plot_df, aes(x = iter.d, y = squaredist.d)) +
   geom_line(aes(color = Coupling, linetype = Linetype), size = 0.75) +
   scale_linetype_manual(values=c(1,3,2)) +
+  # facet_grid(cols = vars(start), rows = vars(l)) +
   ggh4x::facet_grid2(cols = vars(start), rows = vars(l), scales = "free_y", independent = "y") +
   geom_hline(data = plot_df_asympt, aes(yintercept = squaredist.d, 
                                         color = Coupling, 
@@ -316,8 +324,9 @@ out_plot <-
         strip.text.y = element_text(size = 14),
         legend.text=element_text(size = 11)) +
   xlab(paste("Iteration", TeX("$t/d$"))) +
-  ylab(TeX("$|| X_t - Y_t||^2/d$")) + guides(linetype = guide_legend(override.aes = list(size = 0.75)),
-                                             color = guide_legend(override.aes = list(size = 2)))
+  ylab("Scaled squared distance") + 
+  guides(color = guide_legend(override.aes = list(size = 2), order = 1), 
+         linetype = guide_legend(override.aes = list(linewidth = 0.75), order = 2))
 out_plot 
 
 ggsave(filename = "spherical.pdf", 
@@ -327,7 +336,49 @@ ggsave(filename = "spherical.pdf",
 
 
 
+############
+# Contractivity and long-time behaviour in finite dimension
 
+library(rwmcouplings)
+library(foreach)
+library(doParallel)
+library(ggplot2)
 
+algs <- c(RWM_gcrn, RWM_refl)
+cpls <- c("GCRN", "Reflection")
+ds <- c(1,2,3,4,5,10,100,1000,10000)
+hs <- 2.38 / sqrt(ds)
+iters <- ds * 200
+reps <- 3
 
+cl <- makeCluster(3)
+registerDoParallel(cl)
+contractivity_df <-
+  foreach(r = 1:reps, .combine = "rbind") %:%
+  foreach(alg = algs, cpl = cpls, .combine = "rbind") %:%
+  foreach(d = ds, h = hs, iter = iters, .combine = "rbind", .packages = "rwmcouplings") %dopar% {
+    x <- rnorm(d)
+    y <- rnorm(d)
+    
+    thin <- ceiling(d/2); thinned_iter <- seq(0,iter,thin)
+    
+    squaredist <- alg(x,y,h,iter,spherical,spherical_grad)$squaredist[thinned_iter + 1]
+    
+    return(data.frame("iter" = thinned_iter, "squaredist" = squaredist, "h" = h^2, "d" = d, "coupling" = cpl, "replicate" = r))
+  }
+stopCluster(cl)
+
+contractivity_df$replicate <- as.factor(contractivity_df$replicate)
+
+ggplot(contractivity_df, aes(x = iter/d, y = squaredist, color = replicate)) +
+  facet_grid(coupling~d, scales = "free", labeller = label_both) +
+  geom_line() +
+  geom_hline(aes(yintercept = h^2), color = "black", linetype = "dashed") +
+  geom_text(aes(x=0,y=h^2,label="y = h^2"), stat = "unique", vjust="inward",hjust="inward",color = "black") +
+  scale_y_log10() +
+  theme_bw() +
+  labs(x  = "Iteration (times d)", 
+       y = "Squared distance between chains", 
+       title = "Contractivity in finite dimension",
+       subtitle = "Spherical Gaussian target")
 

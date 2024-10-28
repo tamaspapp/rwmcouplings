@@ -11,21 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// GCRNHugHop
-Rcpp::List GCRNHugHop(const Eigen::Map<Eigen::ArrayXd>& x0, const Eigen::Map<Eigen::ArrayXd>& y0, const Eigen::Map<Eigen::ArrayXd>& hug_params, const Eigen::Map<Eigen::ArrayXd>& hop_params, const int& iter, const int& thin);
-RcppExport SEXP _rwmcouplings_GCRNHugHop(SEXP x0SEXP, SEXP y0SEXP, SEXP hug_paramsSEXP, SEXP hop_paramsSEXP, SEXP iterSEXP, SEXP thinSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::ArrayXd>& >::type x0(x0SEXP);
-    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::ArrayXd>& >::type y0(y0SEXP);
-    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::ArrayXd>& >::type hug_params(hug_paramsSEXP);
-    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::ArrayXd>& >::type hop_params(hop_paramsSEXP);
-    Rcpp::traits::input_parameter< const int& >::type iter(iterSEXP);
-    Rcpp::traits::input_parameter< const int& >::type thin(thinSEXP);
-    rcpp_result_gen = Rcpp::wrap(GCRNHugHop(x0, y0, hug_params, hop_params, iter, thin));
-    return rcpp_result_gen;
-END_RCPP
-}
 // SetSeed_cpp
 void SetSeed_cpp(const int& seed, const int& stream);
 RcppExport SEXP _rwmcouplings_SetSeed_cpp(SEXP seedSEXP, SEXP streamSEXP) {
@@ -34,6 +19,76 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type stream(streamSEXP);
     SetSeed_cpp(seed, stream);
     return R_NilValue;
+END_RCPP
+}
+// rwm_cpp
+Rcpp::List rwm_cpp(const Rcpp::List& target_params, const Rcpp::List& sampler_params, const Eigen::Map<Eigen::VectorXd>& theta0, const int& iter, const int& thin);
+RcppExport SEXP _rwmcouplings_rwm_cpp(SEXP target_paramsSEXP, SEXP sampler_paramsSEXP, SEXP theta0SEXP, SEXP iterSEXP, SEXP thinSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type target_params(target_paramsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampler_params(sampler_paramsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type theta0(theta0SEXP);
+    Rcpp::traits::input_parameter< const int& >::type iter(iterSEXP);
+    Rcpp::traits::input_parameter< const int& >::type thin(thinSEXP);
+    rcpp_result_gen = Rcpp::wrap(rwm_cpp(target_params, sampler_params, theta0, iter, thin));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mala_cpp
+Rcpp::List mala_cpp(const Rcpp::List& target_params, const Rcpp::List& sampler_params, const Eigen::Map<Eigen::VectorXd>& theta0, const int& iter, const int& thin);
+RcppExport SEXP _rwmcouplings_mala_cpp(SEXP target_paramsSEXP, SEXP sampler_paramsSEXP, SEXP theta0SEXP, SEXP iterSEXP, SEXP thinSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type target_params(target_paramsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampler_params(sampler_paramsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type theta0(theta0SEXP);
+    Rcpp::traits::input_parameter< const int& >::type iter(iterSEXP);
+    Rcpp::traits::input_parameter< const int& >::type thin(thinSEXP);
+    rcpp_result_gen = Rcpp::wrap(mala_cpp(target_params, sampler_params, theta0, iter, thin));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rwm_twoscalegcrn_cpp
+Rcpp::List rwm_twoscalegcrn_cpp(const Rcpp::List& target_params, const Rcpp::List& sampler_params, const Eigen::Map<Eigen::VectorXd>& x0, const Eigen::Map<Eigen::VectorXd>& y0, const int& iter);
+RcppExport SEXP _rwmcouplings_rwm_twoscalegcrn_cpp(SEXP target_paramsSEXP, SEXP sampler_paramsSEXP, SEXP x0SEXP, SEXP y0SEXP, SEXP iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type target_params(target_paramsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampler_params(sampler_paramsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type y0(y0SEXP);
+    Rcpp::traits::input_parameter< const int& >::type iter(iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(rwm_twoscalegcrn_cpp(target_params, sampler_params, x0, y0, iter));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rwm_twoscalegcrefl_cpp
+Rcpp::List rwm_twoscalegcrefl_cpp(const Rcpp::List& target_params, const Rcpp::List& sampler_params, const Eigen::Map<Eigen::VectorXd>& x0, const Eigen::Map<Eigen::VectorXd>& y0, const int& iter);
+RcppExport SEXP _rwmcouplings_rwm_twoscalegcrefl_cpp(SEXP target_paramsSEXP, SEXP sampler_paramsSEXP, SEXP x0SEXP, SEXP y0SEXP, SEXP iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type target_params(target_paramsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampler_params(sampler_paramsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type y0(y0SEXP);
+    Rcpp::traits::input_parameter< const int& >::type iter(iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(rwm_twoscalegcrefl_cpp(target_params, sampler_params, x0, y0, iter));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mala_twoscalecrn_cpp
+Rcpp::List mala_twoscalecrn_cpp(const Rcpp::List& target_params, const Rcpp::List& sampler_params, const Eigen::Map<Eigen::VectorXd>& x0, const Eigen::Map<Eigen::VectorXd>& y0, const int& iter);
+RcppExport SEXP _rwmcouplings_mala_twoscalecrn_cpp(SEXP target_paramsSEXP, SEXP sampler_paramsSEXP, SEXP x0SEXP, SEXP y0SEXP, SEXP iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type target_params(target_paramsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type sampler_params(sampler_paramsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type y0(y0SEXP);
+    Rcpp::traits::input_parameter< const int& >::type iter(iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(mala_twoscalecrn_cpp(target_params, sampler_params, x0, y0, iter));
+    return rcpp_result_gen;
 END_RCPP
 }
 // SampleLatentVariables
@@ -119,6 +174,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// svmTwoScaleGCReflRWM
+Rcpp::List svmTwoScaleGCReflRWM(const Eigen::Map<Eigen::VectorXd> x0, const Eigen::Map<Eigen::VectorXd> y0, const Eigen::Map<Eigen::VectorXd> y_data, const double& beta, const double& sigma, const double& phi, const double& h, const int& iter, const int& thin, const double& thresh);
+RcppExport SEXP _rwmcouplings_svmTwoScaleGCReflRWM(SEXP x0SEXP, SEXP y0SEXP, SEXP y_dataSEXP, SEXP betaSEXP, SEXP sigmaSEXP, SEXP phiSEXP, SEXP hSEXP, SEXP iterSEXP, SEXP thinSEXP, SEXP threshSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd> >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd> >::type y0(y0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd> >::type y_data(y_dataSEXP);
+    Rcpp::traits::input_parameter< const double& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< const double& >::type h(hSEXP);
+    Rcpp::traits::input_parameter< const int& >::type iter(iterSEXP);
+    Rcpp::traits::input_parameter< const int& >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< const double& >::type thresh(threshSEXP);
+    rcpp_result_gen = Rcpp::wrap(svmTwoScaleGCReflRWM(x0, y0, y_data, beta, sigma, phi, h, iter, thin, thresh));
+    return rcpp_result_gen;
+END_RCPP
+}
 // svmLaplaceGCRNRWM
 Rcpp::List svmLaplaceGCRNRWM(const Eigen::Map<Eigen::VectorXd> x0, const Eigen::Map<Eigen::VectorXd> y0, const Eigen::Map<Eigen::ArrayXd> y_data, const double& beta, const double& sigma, const double& phi, const Eigen::Map<Eigen::VectorXd> mu, const Eigen::Map<Eigen::SparseMatrix<double>> Omega, const Eigen::Map<Eigen::SparseMatrix<double>> Omega_chol, const double& h, const int& iter, const int& thin);
 RcppExport SEXP _rwmcouplings_svmLaplaceGCRNRWM(SEXP x0SEXP, SEXP y0SEXP, SEXP y_dataSEXP, SEXP betaSEXP, SEXP sigmaSEXP, SEXP phiSEXP, SEXP muSEXP, SEXP OmegaSEXP, SEXP Omega_cholSEXP, SEXP hSEXP, SEXP iterSEXP, SEXP thinSEXP) {
@@ -182,18 +256,104 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// svmLaplaceGCReflRWM
+Rcpp::List svmLaplaceGCReflRWM(const Eigen::Map<Eigen::VectorXd> x0, const Eigen::Map<Eigen::VectorXd> y0, const Eigen::Map<Eigen::ArrayXd> y_data, const double& beta, const double& sigma, const double& phi, const Eigen::Map<Eigen::VectorXd> mu, const Eigen::Map<Eigen::SparseMatrix<double>> Omega, const Eigen::Map<Eigen::SparseMatrix<double>> Omega_chol, const double& h, const int& iter, const int& thin);
+RcppExport SEXP _rwmcouplings_svmLaplaceGCReflRWM(SEXP x0SEXP, SEXP y0SEXP, SEXP y_dataSEXP, SEXP betaSEXP, SEXP sigmaSEXP, SEXP phiSEXP, SEXP muSEXP, SEXP OmegaSEXP, SEXP Omega_cholSEXP, SEXP hSEXP, SEXP iterSEXP, SEXP thinSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd> >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd> >::type y0(y0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::ArrayXd> >::type y_data(y_dataSEXP);
+    Rcpp::traits::input_parameter< const double& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd> >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::SparseMatrix<double>> >::type Omega(OmegaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::SparseMatrix<double>> >::type Omega_chol(Omega_cholSEXP);
+    Rcpp::traits::input_parameter< const double& >::type h(hSEXP);
+    Rcpp::traits::input_parameter< const int& >::type iter(iterSEXP);
+    Rcpp::traits::input_parameter< const int& >::type thin(thinSEXP);
+    rcpp_result_gen = Rcpp::wrap(svmLaplaceGCReflRWM(x0, y0, y_data, beta, sigma, phi, mu, Omega, Omega_chol, h, iter, thin));
+    return rcpp_result_gen;
+END_RCPP
+}
+// svmLaplacetwoscaleGCReflRWM
+Rcpp::List svmLaplacetwoscaleGCReflRWM(const Eigen::Map<Eigen::VectorXd> x0, const Eigen::Map<Eigen::VectorXd> y0, const Eigen::Map<Eigen::ArrayXd> y_data, const double& beta, const double& sigma, const double& phi, const Eigen::Map<Eigen::VectorXd> mu, const Eigen::Map<Eigen::SparseMatrix<double>> Omega, const Eigen::Map<Eigen::SparseMatrix<double>> Omega_chol, const double& h, const int& iter, const int& thin, const double& thresh);
+RcppExport SEXP _rwmcouplings_svmLaplacetwoscaleGCReflRWM(SEXP x0SEXP, SEXP y0SEXP, SEXP y_dataSEXP, SEXP betaSEXP, SEXP sigmaSEXP, SEXP phiSEXP, SEXP muSEXP, SEXP OmegaSEXP, SEXP Omega_cholSEXP, SEXP hSEXP, SEXP iterSEXP, SEXP thinSEXP, SEXP threshSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd> >::type x0(x0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd> >::type y0(y0SEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::ArrayXd> >::type y_data(y_dataSEXP);
+    Rcpp::traits::input_parameter< const double& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd> >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::SparseMatrix<double>> >::type Omega(OmegaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::SparseMatrix<double>> >::type Omega_chol(Omega_cholSEXP);
+    Rcpp::traits::input_parameter< const double& >::type h(hSEXP);
+    Rcpp::traits::input_parameter< const int& >::type iter(iterSEXP);
+    Rcpp::traits::input_parameter< const int& >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< const double& >::type thresh(threshSEXP);
+    rcpp_result_gen = Rcpp::wrap(svmLaplacetwoscaleGCReflRWM(x0, y0, y_data, beta, sigma, phi, mu, Omega, Omega_chol, h, iter, thin, thresh));
+    return rcpp_result_gen;
+END_RCPP
+}
+// logpi_cpp
+double logpi_cpp(const Rcpp::List& target_params, const Eigen::Map<Eigen::VectorXd>& theta);
+RcppExport SEXP _rwmcouplings_logpi_cpp(SEXP target_paramsSEXP, SEXP thetaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type target_params(target_paramsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type theta(thetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(logpi_cpp(target_params, theta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gradlogpi_cpp
+Eigen::VectorXd gradlogpi_cpp(const Rcpp::List& target_params, const Eigen::Map<Eigen::VectorXd>& theta);
+RcppExport SEXP _rwmcouplings_gradlogpi_cpp(SEXP target_paramsSEXP, SEXP thetaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type target_params(target_paramsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type theta(thetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(gradlogpi_cpp(target_params, theta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// hesslogpi_cpp
+Eigen::MatrixXd hesslogpi_cpp(const Rcpp::List& target_params, const Eigen::Map<Eigen::VectorXd>& theta);
+RcppExport SEXP _rwmcouplings_hesslogpi_cpp(SEXP target_paramsSEXP, SEXP thetaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type target_params(target_paramsSEXP);
+    Rcpp::traits::input_parameter< const Eigen::Map<Eigen::VectorXd>& >::type theta(thetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(hesslogpi_cpp(target_params, theta));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rwmcouplings_GCRNHugHop", (DL_FUNC) &_rwmcouplings_GCRNHugHop, 6},
     {"_rwmcouplings_SetSeed_cpp", (DL_FUNC) &_rwmcouplings_SetSeed_cpp, 2},
+    {"_rwmcouplings_rwm_cpp", (DL_FUNC) &_rwmcouplings_rwm_cpp, 5},
+    {"_rwmcouplings_mala_cpp", (DL_FUNC) &_rwmcouplings_mala_cpp, 5},
+    {"_rwmcouplings_rwm_twoscalegcrn_cpp", (DL_FUNC) &_rwmcouplings_rwm_twoscalegcrn_cpp, 5},
+    {"_rwmcouplings_rwm_twoscalegcrefl_cpp", (DL_FUNC) &_rwmcouplings_rwm_twoscalegcrefl_cpp, 5},
+    {"_rwmcouplings_mala_twoscalecrn_cpp", (DL_FUNC) &_rwmcouplings_mala_twoscalecrn_cpp, 5},
     {"_rwmcouplings_SampleLatentVariables", (DL_FUNC) &_rwmcouplings_SampleLatentVariables, 3},
     {"_rwmcouplings_svmRWM", (DL_FUNC) &_rwmcouplings_svmRWM, 7},
     {"_rwmcouplings_svmCRNRWM", (DL_FUNC) &_rwmcouplings_svmCRNRWM, 9},
     {"_rwmcouplings_svmReflMaxRWM", (DL_FUNC) &_rwmcouplings_svmReflMaxRWM, 9},
     {"_rwmcouplings_svmTwoScaleGCRNRWM", (DL_FUNC) &_rwmcouplings_svmTwoScaleGCRNRWM, 10},
+    {"_rwmcouplings_svmTwoScaleGCReflRWM", (DL_FUNC) &_rwmcouplings_svmTwoScaleGCReflRWM, 10},
     {"_rwmcouplings_svmLaplaceGCRNRWM", (DL_FUNC) &_rwmcouplings_svmLaplaceGCRNRWM, 12},
     {"_rwmcouplings_svmLaplaceCRNRWM", (DL_FUNC) &_rwmcouplings_svmLaplaceCRNRWM, 12},
     {"_rwmcouplings_svmLaplaceReflRWM", (DL_FUNC) &_rwmcouplings_svmLaplaceReflRWM, 12},
+    {"_rwmcouplings_svmLaplaceGCReflRWM", (DL_FUNC) &_rwmcouplings_svmLaplaceGCReflRWM, 12},
+    {"_rwmcouplings_svmLaplacetwoscaleGCReflRWM", (DL_FUNC) &_rwmcouplings_svmLaplacetwoscaleGCReflRWM, 13},
+    {"_rwmcouplings_logpi_cpp", (DL_FUNC) &_rwmcouplings_logpi_cpp, 2},
+    {"_rwmcouplings_gradlogpi_cpp", (DL_FUNC) &_rwmcouplings_gradlogpi_cpp, 2},
+    {"_rwmcouplings_hesslogpi_cpp", (DL_FUNC) &_rwmcouplings_hesslogpi_cpp, 2},
     {NULL, NULL, 0}
 };
 

@@ -4,7 +4,7 @@
 \alias{cplhughop}
 \title{CRN Hug + GCRN Hop 
 Two-scale coupling for Hop: 
-  1. apply rejection-sampled maximal proposal coupling when fall under some threshold of squared distance
+ 1. apply rejection-sampled maximal proposal coupling when fall under some threshold of squared distance
  2. apply GCRN when fall above the threshold}
 \usage{
 cplhughop(x0, y0, Time, Bounces, lam, kap, thresh, iter, logpi, gradlogpi)
@@ -12,6 +12,6 @@ cplhughop(x0, y0, Time, Bounces, lam, kap, thresh, iter, logpi, gradlogpi)
 \description{
 CRN Hug + GCRN Hop 
 Two-scale coupling for Hop: 
-  1. apply rejection-sampled maximal proposal coupling when fall under some threshold of squared distance
+ 1. apply rejection-sampled maximal proposal coupling when fall under some threshold of squared distance
  2. apply GCRN when fall above the threshold
 }

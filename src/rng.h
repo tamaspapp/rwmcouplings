@@ -5,7 +5,7 @@
 
 // [[Rcpp::depends(BH)]]
 
-#include <Rcpp.h>
+#include <RcppEigen.h>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 #include "pcg_random.hpp"
@@ -21,6 +21,8 @@ namespace RNG
     // Declare distributions
     extern uniform_distribution runif;
     extern normal_distribution rnorm;
+
+    extern Eigen::VectorXd GaussianVector(const int &d);
 
 } // namesepace RNG
 

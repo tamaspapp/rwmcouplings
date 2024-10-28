@@ -96,7 +96,7 @@ ode_crn <- function(x0,y0,v0,l,ode_times){
 
 
 # Reflection coupling ###
-b_refl <- function(x,y,v,l,z1,z,offset) {
+b_refl <- function(x,y,v,l) { # ,z1,z,offset) {
   if(abs(x + y - 2*v) < 1e-12) {
     rho <- 1 
   } else {

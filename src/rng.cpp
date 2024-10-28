@@ -10,6 +10,8 @@ Set up random number generation such that:
 This is acheived by defining the RNG in its own namespace, which is compiled together with all of the random number generating functions.
 */
 
+#include <RcppEigen.h>
+// [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::depends(BH)]]
 
 #include <Rcpp.h>
@@ -24,7 +26,17 @@ namespace RNG
 {
     pcg32 rng(12345);
     uniform_distribution runif(0., 1.); // Boost function
-    normal_distribution rnorm(0., 1.);       // Ziggurat method, much faster than R's inversion.
+    normal_distribution rnorm(0., 1.);  // Ziggurat method, much faster than R's inversion.
+
+    Eigen::VectorXd GaussianVector(const int &d)
+    {
+        Eigen::VectorXd result(d);
+        for (int i = 0; i < d; i++)
+        {
+            result[i] = RNG::rnorm(RNG::rng);
+        }
+        return result;
+    }
 
 } // namespace RNG
 
